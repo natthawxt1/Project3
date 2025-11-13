@@ -1,5 +1,10 @@
 {
   "dependencies": {
     "path-to-regexp": "^0.1.7"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17"
   }
 }
