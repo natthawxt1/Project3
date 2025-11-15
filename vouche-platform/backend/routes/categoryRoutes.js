@@ -1,18 +1,18 @@
 import express from 'express';
 import {
   getCategories,
-  getCategory,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 } from '../controllers/categoryController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { adminOnly } from '../middleware/adminMiddleware.js';
+import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Public routes
 router.get('/', getCategories);
-router.get('/:id', getCategory);
+
+// Protected routes (Admin only)
 router.post('/', protect, adminOnly, createCategory);
 router.put('/:id', protect, adminOnly, updateCategory);
 router.delete('/:id', protect, adminOnly, deleteCategory);

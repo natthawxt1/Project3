@@ -4,17 +4,24 @@ import {
   getProduct,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 } from '../controllers/productController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { adminOnly } from '../middleware/adminMiddleware.js';
+import { protect, adminOnly } from '../middleware/authMiddleware.js';
+import upload from '../config/multer.js';
 
 const router = express.Router();
 
+// ========================
+// Public Routes
+// ========================
 router.get('/', getProducts);
-router.get('/:id', getProduct);
-router.post('/', protect, adminOnly, createProduct);
-router.put('/:id', protect, adminOnly, updateProduct);
+router.get('/:id', getProduct); // ⭐ Product Detail Route
+
+// ========================
+// Admin Routes
+// ========================
+router.post('/', protect, adminOnly, upload.single('image'), createProduct);
+router.put('/:id', protect, adminOnly, upload.single('image'), updateProduct);
 router.delete('/:id', protect, adminOnly, deleteProduct);
 
 export default router;

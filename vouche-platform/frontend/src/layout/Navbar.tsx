@@ -1,152 +1,150 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogOut, Package, Menu, X } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ShoppingCart, User, LogOut, Menu, X, Package, Settings, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext'; 
+import { useCart } from '@/context/CartContext'; 
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { items } = useCart();
   const navigate = useNavigate();
+  const { getTotalItems } = useCart(); 
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const cartItemsCount = items.reduce((total, item) => total + item.quantity, 0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
-    setIsDropdownOpen(false);
+    setIsProfileOpen(false);
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const totalItems = getTotalItems(); // ⭐ เก็บค่าไว้ใช้
+
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-purple-100 shadow-sm">
+    <nav className="bg-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent"
-            >
+          <Link to="/" className="flex items-center gap-2">
+            <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               VOUCHÉ
-            </motion.div>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/">
-              <motion.span
-                whileHover={{ y: -2 }}
-                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-              >
-                Home
-              </motion.span>
+          <div className="hidden md:flex items-center gap-6">
+            <Link
+              to="/"
+              className={`text-sm font-medium transition-colors hover:text-purple-600 ${
+                isActive('/') ? 'text-purple-600' : 'text-gray-700'
+              }`}
+            >
+              Home
             </Link>
-            <Link to="/shop">
-              <motion.span
-                whileHover={{ y: -2 }}
-                className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-              >
-                Shop
-              </motion.span>
+            <Link
+              to="/shop"
+              className={`text-sm font-medium transition-colors hover:text-purple-600 ${
+                isActive('/shop') ? 'text-purple-600' : 'text-gray-700'
+              }`}
+            >
+              Shop
             </Link>
+            {user && (
+              <Link
+                to="/orders"
+                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-purple-600 ${
+                  isActive('/orders') ? 'text-purple-600' : 'text-gray-700'
+                }`}
+              >
+                <Package className="h-4 w-4" />
+                My Orders
+              </Link>
+            )}
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-4">
-            {/* Cart Button */}
+          {/* Right Section */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* Cart - */}
             <Link to="/cart">
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="relative"
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-primary-50"
-                >
-                  <ShoppingCart className="h-5 w-5 text-primary-600" />
-                </Button>
-                {cartItemsCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-lg"
-                  >
-                    {cartItemsCount}
-                  </motion.div>
+              <Button variant="ghost" size="icon" className="relative rounded-full">
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-purple-600 text-white text-xs">
+                    {totalItems}
+                  </Badge>
                 )}
-              </motion.div>
+              </Button>
             </Link>
 
             {/* User Menu */}
             {user ? (
               <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-100 to-pink-100 hover:from-primary-200 hover:to-pink-200 transition-all"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-600 to-violet-600 flex items-center justify-center text-white font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="hidden sm:block font-semibold text-primary-700">
-                    {user.name}
-                  </span>
-                </motion.button>
+                  <User className="h-5 w-5" />
+                </Button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown */}
                 <AnimatePresence>
-                  {isDropdownOpen && (
+                  {isProfileOpen && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-purple-100 overflow-hidden"
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
                     >
-                      {/* User Info Header */}
-                      <div className="p-4 bg-gradient-to-r from-primary-50 to-pink-50 border-b border-purple-100">
-                        <p className="font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-600">{user.email}</p>
-                        <span className="inline-block mt-2 px-2 py-1 bg-primary-600 text-white text-xs rounded-full">
-                          {user.role === 'admin' ? '👑 Admin' : '✨ Customer'}
-                        </span>
+                      {/* User Info */}
+                      <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 text-white">
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-sm opacity-90">{user.email}</p>
                       </div>
 
                       {/* Menu Items */}
                       <div className="py-2">
-                        <Link
-                          to="/orders"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 transition-colors"
-                        >
-                          <Package className="h-5 w-5 text-primary-600" />
-                          <span className="font-medium text-gray-700">My Orders</span>
-                        </Link>
-
                         {user.role === 'admin' && (
                           <Link
                             to="/admin"
-                            onClick={() => setIsDropdownOpen(false)}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 transition-colors"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                           >
-                            <User className="h-5 w-5 text-primary-600" />
-                            <span className="font-medium text-gray-700">Admin Panel</span>
+                            <LayoutDashboard className="h-4 w-4" />
+                            Admin Dashboard
                           </Link>
                         )}
-
+                        <Link
+                          to="/orders"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <Package className="h-4 w-4" />
+                          My Orders
+                        </Link>
+                        <Link
+                          to="/profile"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Profile Settings
+                        </Link>
+                        <hr className="my-2" />
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
                         >
-                          <LogOut className="h-5 w-5 text-red-600" />
-                          <span className="font-medium text-red-600">Logout</span>
+                          <LogOut className="h-4 w-4" />
+                          Logout
                         </button>
                       </div>
                     </motion.div>
@@ -155,24 +153,35 @@ const Navbar = () => {
               </div>
             ) : (
               <Link to="/auth">
-                <Button className="rounded-full bg-gradient-to-r from-primary-600 to-violet-600 hover:from-primary-700 hover:to-violet-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all">
-                  <User className="h-4 w-4 mr-2" />
+                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full">
                   Sign In
                 </Button>
               </Link>
             )}
+          </div>
 
-            {/* Mobile Menu Button */}
-            <button
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            {/* Cart Button for Mobile */}
+            <Link to="/cart">
+              <Button variant="ghost" size="icon" className="relative rounded-full">
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-purple-600 text-white text-xs">
+                    {totalItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+            
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 hover:bg-primary-50 rounded-lg transition-colors"
+              className="rounded-full"
             >
-              {isMenuOpen ? (
-                <X className="h-6 w-6 text-primary-600" />
-              ) : (
-                <Menu className="h-6 w-6 text-primary-600" />
-              )}
-            </button>
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
           </div>
         </div>
 
@@ -183,36 +192,85 @@ const Navbar = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden overflow-hidden border-t border-purple-100"
+              className="md:hidden border-t border-gray-200 overflow-hidden"
             >
               <div className="py-4 space-y-2">
                 <Link
                   to="/"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 hover:bg-primary-50 rounded-lg transition-colors font-medium text-gray-700"
+                  className={`block px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive('/') ? 'bg-purple-100 text-purple-600' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   Home
                 </Link>
                 <Link
                   to="/shop"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2 hover:bg-primary-50 rounded-lg transition-colors font-medium text-gray-700"
+                  className={`block px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive('/shop') ? 'bg-purple-100 text-purple-600' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   Shop
                 </Link>
+                {user && (
+                  <>
+                    <Link
+                      to="/orders"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        isActive('/orders') ? 'bg-purple-100 text-purple-600' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Package className="h-4 w-4" />
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/cart"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        isActive('/cart') ? 'bg-purple-100 text-purple-600' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      Cart {totalItems > 0 && `(${totalItems})`}
+                    </Link>
+                    {user.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          isActive('/admin') ? 'bg-purple-100 text-purple-600' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </>
+                )}
+                {!user && (
+                  <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Click outside to close dropdown */}
-      {isDropdownOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsDropdownOpen(false)}
-        />
-      )}
     </nav>
   );
 };

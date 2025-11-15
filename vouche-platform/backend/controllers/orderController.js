@@ -1,325 +1,304 @@
-import pool from '../config/database.js';
-
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Private
 export const createOrder = async (req, res) => {
   const connection = await pool.getConnection();
-  
+
   try {
     await connection.beginTransaction();
 
-    const { items, payment_method } = req.body;
-    const userId = req.user.user_id;
+    const userId = req.user.userId;
+    const { cart_items } = req.body;
 
-    // Validation
-    if (!items || items.length === 0) {
-      await connection.rollback();
+    // ⭐ เพิ่ม log
+    console.log('🆔 User ID:', userId);
+    console.log('🛒 Cart Items:', cart_items);
+
+    if (!cart_items || cart_items.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Cart is empty'
+        message: 'Cart is empty',
       });
     }
 
-    // Calculate total and check stock
     let totalPrice = 0;
     const orderItems = [];
 
-    for (const item of items) {
-      // Get product details and available stock
+    // Validate products and calculate total
+    for (const item of cart_items) {
+      console.log('🔍 Checking product:', item.product_id);
+      
       const [products] = await connection.query(
-        `SELECT p.*, 
-         COUNT(CASE WHEN gc.status = 'new' AND gc.order_id IS NULL THEN 1 END) as available_stock
-         FROM product p
-         LEFT JOIN gift_code gc ON p.product_id = gc.product_id
-         WHERE p.product_id = ? AND p.is_active = TRUE
-         GROUP BY p.product_id`,
+        'SELECT product_id, name, price FROM product WHERE product_id = ? AND is_active = 1',
         [item.product_id]
       );
 
+      console.log('📦 Product found:', products);
+
       if (products.length === 0) {
-        await connection.rollback();
-        return res.status(404).json({
-          success: false,
-          message: `Product ${item.product_id} not found or inactive`
-        });
+        throw new Error(`Product ${item.product_id} not found or inactive`);
       }
 
       const product = products[0];
 
-      if (product.available_stock < item.quantity) {
-        await connection.rollback();
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for ${product.name}. Available: ${product.available_stock}`
-        });
+      // Check stock
+      const [stockCheck] = await connection.query(
+        `SELECT COUNT(*) as available_stock 
+         FROM gift_code 
+         WHERE product_id = ? AND status = 'new' AND order_id IS NULL`,
+        [item.product_id]
+      );
+
+      console.log('📊 Stock available:', stockCheck[0].available_stock);
+
+      if (stockCheck[0].available_stock < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.name}`);
       }
 
-      orderItems.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: product.price
-      });
+      const subtotal = product.price * item.quantity;
+      totalPrice += subtotal;
 
-      totalPrice += product.price * item.quantity;
+      orderItems.push({
+        product_id: product.product_id,
+        quantity: item.quantity,
+        price: product.price,
+        subtotal: subtotal,
+      });
     }
+
+    console.log('💰 Total Price:', totalPrice);
 
     // Create order
     const [orderResult] = await connection.query(
-      'INSERT INTO `order` (user_id, total_price, status) VALUES (?, ?, ?)',
+      'INSERT INTO `orders` (user_id, total_price, status) VALUES (?, ?, ?)',
       [userId, totalPrice, 'pending']
     );
 
     const orderId = orderResult.insertId;
+    console.log('✅ Order Created! ID:', orderId);
 
-    // Insert order items
+    // Create order items and assign gift codes
     for (const item of orderItems) {
+      // Insert order item
       await connection.query(
         'INSERT INTO order_item (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)',
-        [orderId, item.product_id, item.quantity, item.unit_price]
+        [orderId, item.product_id, item.quantity, item.price]
       );
 
       // Assign gift codes to this order
       await connection.query(
         `UPDATE gift_code 
          SET order_id = ?, status = 'active'
-         WHERE product_id = ? 
-         AND status = 'new' 
-         AND order_id IS NULL
+         WHERE product_id = ? AND status = 'new' AND order_id IS NULL
          LIMIT ?`,
         [orderId, item.product_id, item.quantity]
       );
     }
 
-    // Create payment record
-    await connection.query(
-      'INSERT INTO payment (order_id, payment_method, amount, payment_status) VALUES (?, ?, ?, ?)',
-      [orderId, payment_method || 'card', totalPrice, 'successful']
-    );
-
-    // Update order status to paid
-    await connection.query(
-      'UPDATE `order` SET status = ? WHERE order_id = ?',
-      ['paid', orderId]
-    );
-
     await connection.commit();
 
-    // Get order details with gift codes
-    const [orderDetails] = await connection.query(
-      `SELECT 
-        o.*,
-        u.name as customer_name,
-        u.email as customer_email
-       FROM \`order\` o
-       JOIN user u ON o.user_id = u.user_id
-       WHERE o.order_id = ?`,
-      [orderId]
-    );
-
-    // Get order items with gift codes
-    const [items_with_codes] = await connection.query(
-      `SELECT 
-        oi.*,
-        p.name as product_name,
-        GROUP_CONCAT(gc.code) as gift_codes
-       FROM order_item oi
-       JOIN product p ON oi.product_id = p.product_id
-       LEFT JOIN gift_code gc ON gc.order_id = oi.order_id AND gc.product_id = oi.product_id
-       WHERE oi.order_id = ?
-       GROUP BY oi.order_item_id`,
-      [orderId]
-    );
+    console.log('🎉 Order Complete!');
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
       order: {
-        ...orderDetails[0],
-        items: items_with_codes.map(item => ({
-          ...item,
-          gift_codes: item.gift_codes ? item.gift_codes.split(',') : []
-        }))
-      }
+        order_id: orderId,
+        total_price: totalPrice,
+        status: 'pending',
+      },
     });
   } catch (error) {
     await connection.rollback();
-    console.error('Create order error:', error);
+    console.error('❌ Create order error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: error.message || 'Failed to create order',
     });
   } finally {
     connection.release();
   }
 };
 
-// @desc    Get all orders (Admin)
-// @route   GET /api/orders
-// @access  Private/Admin
-export const getAllOrders = async (req, res) => {
+import pool from '../config/database.js';
+
+// ===================================
+// Get My Orders (User)
+// ===================================
+export const getMyOrders = async (req, res) => {
   try {
+    const userId = req.user.userId;
+
     const [orders] = await pool.query(
       `SELECT 
-        o.*,
-        u.name as customer_name,
-        u.email as customer_email,
+        o.order_id,
+        o.total_price,
+        o.status,
+        o.created_at as order_date,
         COUNT(DISTINCT oi.order_item_id) as items_count
-       FROM \`order\` o
-       JOIN user u ON o.user_id = u.user_id
-       LEFT JOIN order_item oi ON o.order_id = oi.order_id
-       GROUP BY o.order_id
-       ORDER BY o.created_at DESC`
+      FROM \`orders\` o
+      LEFT JOIN order_item oi ON o.order_id = oi.order_id
+      WHERE o.user_id = ?
+      GROUP BY o.order_id
+      ORDER BY o.created_at DESC`,
+      [userId]
     );
 
-    res.json({
+    res.status(200).json({
       success: true,
-      count: orders.length,
-      orders
+      orders,
     });
   } catch (error) {
-    console.error('Get all orders error:', error);
+    console.error('Get my orders error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Failed to fetch orders',
+      error: error.message,
     });
   }
 };
 
-// @desc    Get user's orders
-// @route   GET /api/orders/user
-// @access  Private
-export const getUserOrders = async (req, res) => {
+// ===================================
+// Get Order Details (User)
+// ===================================
+export const getOrderById = async (req, res) => {
   try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    // Get order basic info
     const [orders] = await pool.query(
       `SELECT 
-        o.*,
-        COUNT(DISTINCT oi.order_item_id) as items_count
-       FROM \`order\` o
-       LEFT JOIN order_item oi ON o.order_id = oi.order_id
-       WHERE o.user_id = ?
-       GROUP BY o.order_id
-       ORDER BY o.created_at DESC`,
-      [req.user.user_id]
-    );
-
-    res.json({
-      success: true,
-      count: orders.length,
-      orders
-    });
-  } catch (error) {
-    console.error('Get user orders error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
-};
-
-// @desc    Get order details with gift codes
-// @route   GET /api/orders/:id
-// @access  Private
-export const getOrderDetails = async (req, res) => {
-  try {
-    // Get order
-    const [orders] = await pool.query(
-      `SELECT 
-        o.*,
-        u.name as customer_name,
-        u.email as customer_email
-       FROM \`order\` o
-       JOIN user u ON o.user_id = u.user_id
-       WHERE o.order_id = ?`,
-      [req.params.id]
+        o.order_id,
+        o.user_id,
+        o.total_price,
+        o.status,
+        o.created_at as order_date
+      FROM \`orders\` o
+      WHERE o.order_id = ? AND o.user_id = ?`,
+      [id, userId]
     );
 
     if (orders.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found'
+        message: 'Order not found',
       });
     }
 
     const order = orders[0];
 
-    // Check authorization
-    if (req.user.role !== 'admin' && order.user_id !== req.user.user_id) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to view this order'
-      });
-    }
-
-    // Get order items with gift codes
+    // Get order items
     const [items] = await pool.query(
       `SELECT 
-        oi.*,
+        oi.order_item_id,
+        oi.product_id,
+        oi.quantity,
+        oi.unit_price as price,
+        oi.subtotal,
         p.name as product_name,
-        p.image_url,
-        GROUP_CONCAT(gc.code) as gift_codes
-       FROM order_item oi
-       JOIN product p ON oi.product_id = p.product_id
-       LEFT JOIN gift_code gc ON gc.order_id = oi.order_id AND gc.product_id = oi.product_id
-       WHERE oi.order_id = ?
-       GROUP BY oi.order_item_id`,
-      [req.params.id]
+        p.image_url
+      FROM order_item oi
+      JOIN product p ON oi.product_id = p.product_id
+      WHERE oi.order_id = ?`,
+      [id]
     );
 
-    res.json({
+    // Get gift codes for each item
+    for (let item of items) {
+      const [codes] = await pool.query(
+        `SELECT 
+          gift_code_id,
+          code,
+          status,
+          redeemed_at
+        FROM gift_code
+        WHERE product_id = ? AND order_id = ?`,
+        [item.product_id, id]
+      );
+      item.gift_codes = codes;
+    }
+
+    order.items = items;
+
+    res.status(200).json({
       success: true,
-      order: {
-        ...order,
-        items: items.map(item => ({
-          ...item,
-          gift_codes: item.gift_codes ? item.gift_codes.split(',') : []
-        }))
-      }
+      order,
     });
   } catch (error) {
-    console.error('Get order details error:', error);
+    console.error('Get order by ID error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Failed to fetch order details',
+      error: error.message,
     });
   }
 };
 
-// @desc    Update order status
-// @route   PUT /api/orders/:id/status
-// @access  Private/Admin
-export const updateOrderStatus = async (req, res) => {
+// ===================================
+// Get All Orders (Admin)
+// ===================================
+export const getAllOrders = async (req, res) => {
   try {
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide status'
-      });
-    }
-
-    const [result] = await pool.query(
-      'UPDATE `order` SET status = ? WHERE order_id = ?',
-      [status, req.params.id]
+    const [orders] = await pool.query(
+      `SELECT 
+        o.order_id,
+        o.user_id,
+        u.name as user_name,
+        u.email as user_email,
+        o.total_price,
+        o.status,
+        o.created_at as order_date,
+        COUNT(DISTINCT oi.order_item_id) as items_count
+      FROM \`orders\` o
+      LEFT JOIN user u ON o.user_id = u.user_id
+      LEFT JOIN order_item oi ON o.order_id = oi.order_id
+      GROUP BY o.order_id
+      ORDER BY o.created_at DESC`
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
+    res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error('❌ Get all orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders',
+      error: error.message,
+    });
+  }
+};
+
+// ===================================
+// Update Order Status (Admin) 
+// ===================================
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['pending', 'paid', 'cancelled', 'refunded'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
         success: false,
-        message: 'Order not found'
+        message: 'Invalid status',
       });
     }
 
-    res.json({
+    await pool.query(
+      'UPDATE `orders` SET status = ? WHERE order_id = ?',
+      [status, id]
+    );
+
+    res.status(200).json({
       success: true,
-      message: 'Order status updated successfully'
+      message: 'Order status updated successfully',
     });
   } catch (error) {
-    console.error('Update order status error:', error);
+    console.error('❌ Update order status error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Failed to update order status',
+      error: error.message,
     });
   }
 };

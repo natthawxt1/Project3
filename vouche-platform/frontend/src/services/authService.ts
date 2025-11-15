@@ -1,18 +1,34 @@
 import api from './api';
 
+// src/services/authService.ts
 export const authService = {
-  login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
-    return response.data;
+  async getProfile() {
+    try {
+      const response = await api.get('/users/profile'); // หรือ /auth/profile
+      console.log('🔍 Profile Response:', response.data); // ⭐ เพิ่มตรงนี้
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  register: async (name: string, email: string, password: string) => {
-    const response = await api.post('/auth/register', { name, email, password });
-    return response.data;
+  async login(email: string, password: string) {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      console.log('🔍 Login Response:', response.data); // ⭐ เพิ่มตรงนี้
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
-  getProfile: async () => {
-    const response = await api.get('/auth/profile');
-    return response.data.user;
+  async register(name: string, email: string, password: string) {
+    try {
+      const response = await api.post('/auth/register', { name, email, password });
+      console.log('🔍 Register Response:', response.data); // ⭐ เพิ่มตรงนี้
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 };

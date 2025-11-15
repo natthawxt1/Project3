@@ -1,28 +1,32 @@
-import api from './api';
-import { Product, ProductsResponse, CategoriesResponse } from '@/types';
+import axios from 'axios';
+import { Product, ProductsResponse, SingleProductResponse } from '@/types';
 
-export const productService = {
-  // Get all products with filters
-  getProducts: async (params?: {
-    category?: number;
-    search?: string;
-    sort?: string;
-    minPrice?: number;
-    maxPrice?: number;
-  }): Promise<ProductsResponse> => {
-    const response = await api.get('/products', { params });
+const API_BASE_URL = 'http://localhost:5000/api';
+
+const productService = {
+  // Get all products
+  async getProducts(): Promise<ProductsResponse> {
+    const response = await axios.get(`${API_BASE_URL}/products`);
     return response.data;
   },
 
-  // Get single product
-  getProduct: async (id: number): Promise<Product> => {
-    const response = await api.get(`/products/${id}`);
-    return response.data.product;
+  // Get product by ID - คืน Product ตรงๆ
+  async getProductById(id: number): Promise<Product> {
+    const response = await axios.get<SingleProductResponse>(`${API_BASE_URL}/products/${id}`);
+    return response.data.product; // คืน .product ตรงๆ
   },
 
-  // Get all categories
-  getCategories: async (): Promise<CategoriesResponse> => {
-    const response = await api.get('/categories');
+  // Get products by category
+  async getProductsByCategory(categoryId: number): Promise<ProductsResponse> {
+    const response = await axios.get(`${API_BASE_URL}/products?category_id=${categoryId}`);
+    return response.data;
+  },
+
+  // Search products
+  async searchProducts(query: string): Promise<ProductsResponse> {
+    const response = await axios.get(`${API_BASE_URL}/products?search=${query}`);
     return response.data;
   },
 };
+
+export default productService;

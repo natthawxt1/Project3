@@ -2,11 +2,11 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ReactNode } from 'react';
 
-interface ProtectedRouteProps {
+interface AdminRouteProps {
   children: ReactNode;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -21,7 +21,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" replace />;
   }
 
+  if (user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+export default AdminRoute;

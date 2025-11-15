@@ -1,18 +1,18 @@
 import express from 'express';
 import {
-  getProductGiftCodes,
-  addGiftCodes,
-  updateGiftCode,
-  deleteGiftCode
+  getGiftCodes,
+  bulkAddGiftCodes,
+  deleteGiftCode,
 } from '../controllers/giftCodeController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { adminOnly } from '../middleware/adminMiddleware.js';
+import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/product/:productId', protect, adminOnly, getProductGiftCodes);
-router.post('/', protect, adminOnly, addGiftCodes);
-router.put('/:id', protect, adminOnly, updateGiftCode);
+// ========================
+// Admin Routes
+// ========================
+router.get('/', protect, adminOnly, getGiftCodes);
+router.post('/bulk', protect, adminOnly, bulkAddGiftCodes);
 router.delete('/:id', protect, adminOnly, deleteGiftCode);
 
 export default router;

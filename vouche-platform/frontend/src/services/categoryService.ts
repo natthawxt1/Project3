@@ -1,34 +1,48 @@
-import api from './api';
-import { Category, CategoriesResponse } from '@/types';
+import axios from 'axios';
 
-export const categoryService = {
+const API_URL = 'http://localhost:5000/api';
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const categoryService = {
   // Get all categories
-  getCategories: async (): Promise<Category[]> => {
-    const response = await api.get<CategoriesResponse>('/categories');
-    return response.data.categories;
+  getCategories: async () => {
+    const response = await axios.get(`${API_URL}/categories`);
+    return response.data;
   },
 
-  // Get single category
-  getCategory: async (id: number): Promise<Category> => {
-    const response = await api.get(`/categories/${id}`);
-    return response.data.category;
+  // Get category by ID
+  getCategoryById: async (id: number) => {
+    const response = await axios.get(`${API_URL}/categories/${id}`);
+    return response.data;
   },
 
   // Create category (Admin)
-  createCategory: async (name: string): Promise<any> => {
-    const response = await api.post('/categories', { name });
+  createCategory: async (data: { name: string; description?: string }) => {
+    const response = await axios.post(`${API_URL}/categories`, data, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 
   // Update category (Admin)
-  updateCategory: async (id: number, name: string): Promise<any> => {
-    const response = await api.put(`/categories/${id}`, { name });
+  updateCategory: async (id: number, data: { name: string; description?: string }) => {
+    const response = await axios.put(`${API_URL}/categories/${id}`, data, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 
   // Delete category (Admin)
-  deleteCategory: async (id: number): Promise<any> => {
-    const response = await api.delete(`/categories/${id}`);
+  deleteCategory: async (id: number) => {
+    const response = await axios.delete(`${API_URL}/categories/${id}`, {
+      headers: getAuthHeaders(),
+    });
     return response.data;
   },
 };
+
+export default categoryService;

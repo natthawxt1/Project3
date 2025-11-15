@@ -34,13 +34,28 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }: ProductFormModal
   });
 
   // -------------------------
+  // Helper: Get full image URL
+  // -------------------------
+  const getFullImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) return '';
+    
+    // ถ้ามี http:// อยู่แล้ว ใช้เลย
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    
+    // ถ้าไม่มี เพิ่ม backend URL
+    return `http://localhost:5000${imageUrl}`;
+  };
+
+  // -------------------------
   // Load categories & product data when modal opens
   // -------------------------
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
       if (product) {
-        // Edit product
+        // Edit product - ใช้รูปจาก backend
         setFormData({
           name: product.name,
           category_id: product.category_id.toString(),
@@ -48,7 +63,10 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }: ProductFormModal
           description: product.description || '',
           gift_codes: '',
         });
-        setImagePreview(product.image_url || '');
+        
+        // ⭐ สร้าง full URL สำหรับ preview
+        const fullImageUrl = getFullImageUrl(product.image_url);
+        setImagePreview(fullImageUrl);
         setImageFile(null);
       } else {
         // Create product
@@ -282,6 +300,10 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }: ProductFormModal
                           src={imagePreview}
                           alt="Preview"
                           className="w-full h-48 object-contain rounded-xl"
+                          onError={(e) => {
+                            // ถ้ารูปโหลดไม่ได้ แสดง placeholder
+                            e.currentTarget.src = 'https://via.placeholder.com/300/9370DB/FFFFFF?text=No+Image';
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
                           <p className="text-white font-semibold">Click or drag to change</p>

@@ -5,58 +5,41 @@ import pool from '../config/database.js';
 // Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '24h'
+    expiresIn: '30d',
   });
 };
 
 // @desc    Register new user
 // @route   POST /api/auth/register
-// @access  Public
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validation
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide all required fields'
-      });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 6 characters'
-      });
-    }
-
-    // Check if user exists
+    // ตรวจสอบว่า email ซ้ำหรือไม่
     const [existingUsers] = await pool.query(
-      'SELECT user_id FROM user WHERE email = ?',
+      'SELECT * FROM `user` WHERE email = ?',
       [email]
     );
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Email already registered'
+        message: 'Email already exists',
       });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    // เข้ารหัส password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // เพิ่ม user ใหม่ - ใช้ password_hash
     const [result] = await pool.query(
-      'INSERT INTO user (name, email, password_hash) VALUES (?, ?, ?)',
-      [name, email, passwordHash]
+      'INSERT INTO `user` (name, email, password_hash) VALUES (?, ?, ?)',
+      [name, email, hashedPassword]
     );
 
     const userId = result.insertId;
 
-    // Generate token
+    // สร้าง token
     const token = generateToken(userId);
 
     res.status(201).json({
@@ -67,59 +50,50 @@ export const register = async (req, res) => {
         user_id: userId,
         name,
         email,
-        role: 'customer'
-      }
+        role: 'customer',
+      },
     });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration'
+      message: 'Registration failed',
     });
   }
 };
 
 // @desc    Login user
 // @route   POST /api/auth/login
-// @access  Public
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide email and password'
-      });
-    }
-
-    // Get user
+    // ค้นหา user - ใช้ password_hash
     const [users] = await pool.query(
-      'SELECT user_id, name, email, password_hash, role FROM user WHERE email = ?',
+      'SELECT user_id, name, email, password_hash, role FROM `user` WHERE email = ?',
       [email]
     );
 
     if (users.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid email or password',
       });
     }
 
     const user = users[0];
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    // ตรวจสอบ password - ใช้ password_hash
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
-    if (!isMatch) {
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Invalid email or password',
       });
     }
 
-    // Generate token
+    // สร้าง token
     const token = generateToken(user.user_id);
 
     res.json({
@@ -130,44 +104,31 @@ export const login = async (req, res) => {
         user_id: user.user_id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during login'
+      message: 'Login failed',
     });
   }
 };
 
 // @desc    Get user profile
 // @route   GET /api/auth/profile
-// @access  Private
 export const getProfile = async (req, res) => {
   try {
-    const [users] = await pool.query(
-      'SELECT user_id, name, email, role, created_at FROM user WHERE user_id = ?',
-      [req.user.user_id]
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
     res.json({
       success: true,
-      user: users[0]
+      user: req.user,
     });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Failed to get profile',
     });
   }
 };

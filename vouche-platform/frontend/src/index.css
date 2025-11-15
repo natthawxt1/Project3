@@ -53,6 +53,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
@@ -64,12 +65,27 @@
   .glass-effect {
     @apply backdrop-blur-xl bg-white/70 border border-white/20;
   }
-  
+
   .gradient-purple {
     background: linear-gradient(135deg, hsl(271, 76%, 53%) 0%, hsl(280, 91%, 65%) 100%);
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent;
   }
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scroll behavior */
+.scrollbar-hide {
+  scroll-behavior: smooth;
 }

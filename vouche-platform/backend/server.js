@@ -1,84 +1,94 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Import Routes
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import giftCodeRoutes from './routes/giftCodeRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// ==================== Middleware ====================
-app.use(cors({
-  origin: function(origin, callback) {
-    // อนุญาตทุก localhost port
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174'
-    ];
-    
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+const app = express();
+
+// ========================
+// Middleware
+// ========================
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== Health Check (ต้องอยู่ก่อน routes อื่น) ====================
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Backend is running!' });
+// ✅ Serve static files for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Log image requests (for debugging)
+app.use('/uploads', (req, res, next) => {
+  console.log('📸 Image requested:', req.url);
+  next();
 });
 
-app.get('/api/test', (req, res) => {
-  res.json({ success: true, message: 'API is working!' });
-});
-
-// ==================== Routes ====================
+// ========================
+// Routes
+// ========================
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/gift-codes', giftCodeRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes); 
 
-// ==================== Error Handling Middleware ====================
-app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error'
+// ========================
+// Health Check
+// ========================
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server is running!',
+    timestamp: new Date().toISOString(),
   });
 });
 
-// ==================== 404 Handler (ต้องอยู่ท้ายสุด) ====================
+// ========================
+// 404 Handler (ต้องอยู่ล่างสุด!)
+// ========================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found',
-    requestedPath: req.path
+    message: 'Route not found',
   });
 });
 
-// ==================== Start Server ====================
-app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-  console.log(`🏠 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-  console.log(`\n✅ Available endpoints:`);
-  console.log(`   GET  /api/test`);
-  console.log(`   POST /api/auth/login`);
-  console.log(`   POST /api/auth/register`);
-  console.log(`   GET  /api/auth/profile`);
-  console.log(`\n`);
+// ========================
+// Error Handler
+// ========================
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+  });
 });
+
+// ========================
+// Start Server
+// ========================
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`📸 Images: http://localhost:${PORT}/uploads`);
+  console.log(`📡 API: http://localhost:${PORT}/api`);
+});
+
+export default app;
