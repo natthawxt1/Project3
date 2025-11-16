@@ -306,7 +306,6 @@ Project3/
 ├── tailwind.config.js # TailwindCSS configuration
 └── README.md # This file
 
-text
 
 ---
 
