@@ -269,6 +269,81 @@ export const getAllOrders = async (req, res) => {
 };
 
 // ===================================
+// Get Order Details (Admin)
+// ===================================
+export const getOrderDetailsAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Fetch basic order info
+    const [orders] = await pool.query(
+      `SELECT 
+        o.order_id,
+        o.user_id,
+        u.name AS user_name,
+        u.email,
+        o.total_price,
+        o.status,
+        o.created_at AS order_date
+      FROM orders o
+      JOIN user u ON o.user_id = u.user_id
+      WHERE o.order_id = ?`,
+      [id]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    const order = orders[0];
+
+    // 2. Fetch items
+    const [items] = await pool.query(
+      `SELECT 
+        oi.order_item_id,
+        oi.product_id,
+        p.name AS product_name,
+        oi.quantity,
+        oi.unit_price AS price,
+        oi.subtotal,
+        p.image_url
+      FROM order_item oi
+      JOIN product p ON oi.product_id = p.product_id
+      WHERE oi.order_id = ?`,
+      [id]
+    );
+
+    // 3. Fetch gift codes per item
+    for (let item of items) {
+      const [codes] = await pool.query(
+        `SELECT gift_code_id, code, status, redeemed_at
+        FROM gift_code
+        WHERE order_id = ? AND product_id = ?`,
+        [id, item.product_id]
+      );
+
+      item.gift_codes = codes;
+    }
+
+    order.items = items;
+
+    res.status(200).json({
+      success: true,
+      order
+    });
+
+  } catch (error) {
+    console.error("Get admin order detail error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch admin order details",
+      error: error.message
+    });
+  }
+};
+
+
+// ===================================
 // Update Order Status (Admin) 
 // ===================================
 export const updateOrderStatus = async (req, res) => {

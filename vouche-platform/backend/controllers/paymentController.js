@@ -76,51 +76,53 @@ export const getPaymentInfo = async (req, res) => {
 // ===================================
 export const confirmPayment = async (req, res) => {
   try {
-    const { order_id } = req.body;
+    const { order_id, payment_method } = req.body;  // <--- new
     const userId = req.user.userId;
 
-    // Get order
+    // 1. Check order
     const [orders] = await pool.query(
-      'SELECT order_id, user_id, status FROM `orders` WHERE order_id = ? AND user_id = ?',
+      'SELECT order_id, user_id, status, total_price FROM `orders` WHERE order_id = ? AND user_id = ?',
       [order_id, userId]
     );
 
     if (orders.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     const order = orders[0];
 
     if (order.status !== 'pending') {
-      return res.status(400).json({
-        success: false,
-        message: 'Order is already processed',
-      });
+      return res.status(400).json({ success: false, message: 'Order already processed' });
     }
 
-    // Update order status to "paid"
+    // 2. Insert into payment table
+    const [result] = await pool.query(
+      `INSERT INTO payment (order_id, payment_method, amount, payment_status) 
+       VALUES (?, ?, ?, ?)`,
+      [order_id, payment_method, order.total_price, 'successful']
+    );
+
+    // 3. Update order status
     await pool.query(
       'UPDATE `orders` SET status = ? WHERE order_id = ?',
       ['paid', order_id]
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Payment confirmed successfully',
-      order: {
-        order_id: order_id,
-        status: 'paid',
-      },
+      payment_id: result.insertId,
+      method: payment_method,
+      order_id,
     });
+
   } catch (error) {
     console.error('Confirm payment error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to confirm payment',
       error: error.message,
     });
   }
 };
+

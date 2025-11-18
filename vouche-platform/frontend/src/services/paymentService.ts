@@ -17,10 +17,17 @@ const paymentService = {
     return response.data;
   },
 
-  confirmPayment: async (orderId: number) => {
+  // ⭐ UPDATED: รับ paymentMethod เพิ่ม และส่งไปที่ backend
+  confirmPayment: async (
+    orderId: number,
+    paymentMethod: 'promptpay' | 'wallet' | 'card'
+  ) => {
     const response = await axios.post(
       `${API_URL}/payment/confirm`,
-      { order_id: orderId },
+      {
+        order_id: orderId,
+        payment_method: paymentMethod,
+      },
       { headers: getAuthHeaders() }
     );
     return response.data;

@@ -99,30 +99,30 @@ const ProductManagement = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-to-br from-purple-50 via-white to-pink-50 min-h-screen">
+      <div className="mx-auto px-4 py-8 container">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <Link to="/admin">
               <Button variant="ghost" size="icon" className="rounded-full">
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent">
+              <h1 className="bg-clip-text bg-gradient-to-r from-primary-600 to-violet-600 font-bold text-transparent text-4xl">
                 Product Management
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="mt-1 text-gray-600">
                 Manage your product catalog and inventory
               </p>
             </div>
           </div>
           <Button
             onClick={handleAdd}
-            className="rounded-full bg-gradient-to-r from-primary-600 to-violet-600 hover:from-primary-700 hover:to-violet-700 shadow-lg"
+            className="bg-gradient-to-r from-primary-600 hover:from-primary-700 to-violet-600 hover:to-violet-700 shadow-lg rounded-full"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="mr-2 w-5 h-5" />
             Add Product
           </Button>
         </div>
@@ -131,13 +131,13 @@ const ProductManagement = () => {
         <Card className="mb-6">
           <CardContent className="p-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="top-1/2 left-4 absolute w-5 h-5 text-gray-400 -translate-y-1/2" />
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 rounded-xl"
+                className="pl-12 rounded-xl h-12"
               />
             </div>
           </CardContent>
@@ -145,32 +145,32 @@ const ProductManagement = () => {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
+          <div className="flex justify-center items-center py-20">
+            <div className="border-4 border-primary-600 border-t-transparent rounded-full w-12 h-12 animate-spin"></div>
           </div>
         ) : filteredProducts.length === 0 ? (
           <Card>
             <CardContent className="py-20 text-center">
-              <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <Package className="mx-auto mb-4 w-16 h-16 text-gray-400" />
+              <h3 className="mb-2 font-semibold text-gray-900 text-xl">
                 No products found
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="mb-6 text-gray-600">
                 {searchQuery ? 'Try adjusting your search' : 'Get started by adding your first product'}
               </p>
               {!searchQuery && (
                 <Button
                   onClick={handleAdd}
-                  className="rounded-full bg-gradient-to-r from-primary-600 to-violet-600"
+                  className="bg-gradient-to-r from-primary-600 to-violet-600 rounded-full"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
+                  <Plus className="mr-2 w-5 h-5" />
                   Add Product
                 </Button>
               )}
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <AnimatePresence>
               {filteredProducts.map((product, index) => (
                 <motion.div
@@ -180,38 +180,42 @@ const ProductManagement = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow">
-                    <div className="aspect-square bg-gradient-to-br from-purple-100 to-pink-100 p-4">
+                  <Card className="hover:shadow-xl overflow-hidden transition-shadow">
+                    <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 aspect-square">
                       {product.image_url ? (
                         <img
-                          src={product.image_url}
+                          src={
+                            product.image_url.startsWith('http')
+                              ? product.image_url
+                              : `http://localhost:5000${product.image_url}`
+                          }
                           alt={product.name}
                           className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-6xl">
+                        <div className="flex justify-center items-center w-full h-full text-6xl">
                           🎁
                         </div>
                       )}
                     </div>
                     <CardContent className="p-4">
                       <div className="mb-2">
-                        <span className="text-xs font-semibold px-2 py-1 bg-primary-100 text-primary-700 rounded-full">
+                        <span className="bg-primary-100 px-2 py-1 rounded-full font-semibold text-primary-700 text-xs">
                           {product.category_name}
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg mb-1 line-clamp-1">
+                      <h3 className="mb-1 font-bold text-lg line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      <p className="mb-3 text-gray-600 text-sm line-clamp-2">
                         {product.description}
                       </p>
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex justify-between items-center mb-4">
                         <div>
-                          <div className="text-2xl font-bold text-primary-600">
+                          <div className="font-bold text-primary-600 text-2xl">
                             ฿{product.price.toLocaleString()}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-gray-600 text-sm">
                             Stock: {product.stock}
                           </div>
                         </div>
@@ -230,16 +234,16 @@ const ProductManagement = () => {
                           size="sm"
                           className="flex-1 rounded-lg"
                         >
-                          <Edit className="h-4 w-4 mr-1" />
+                          <Edit className="mr-1 w-4 h-4" />
                           Edit
                         </Button>
                         <Button
                           onClick={() => handleDelete(product)}
                           variant="outline"
                           size="sm"
-                          className="flex-1 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="flex-1 hover:bg-red-50 rounded-lg text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
+                          <Trash2 className="mr-1 w-4 h-4" />
                           Delete
                         </Button>
                       </div>

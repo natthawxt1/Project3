@@ -85,7 +85,7 @@ const adminService = {
   },
 
   getOrderDetails: async (id: number) => {
-    const response = await axios.get(`${API_URL}/orders/${id}`, {
+    const response = await axios.get(`${API_URL}/orders/admin/${id}`, {
       headers: getAuthHeaders(),
     });
     return response.data;
@@ -129,6 +129,8 @@ const adminService = {
     });
     return response.data;
   },
+
+  
 
 };
 

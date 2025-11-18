@@ -12,6 +12,7 @@ import {
   XCircle,
   DollarSign,
   ShoppingCart,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 import adminService from '@/services/adminService';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface Order {
   order_id: number;
@@ -95,8 +97,8 @@ const OrderManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 min-h-screen">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -104,34 +106,40 @@ const OrderManagement = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-16 h-16 bg-blue-500 rounded-3xl flex items-center justify-center shadow-lg">
-              <Package className="h-8 w-8 text-white" />
+            {/* Navigate back */}
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
+            <div className="flex justify-center items-center bg-blue-500 shadow-lg rounded-3xl w-16 h-16">
+              <Package className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-5xl font-black text-gray-900">Order Management</h1>
-              <p className="text-gray-600 text-lg mt-1">Manage and track customer orders</p>
+              <h1 className="font-black text-gray-900 text-5xl">Order Management</h1>
+              <p className="mt-1 text-gray-600 text-lg">Manage and track customer orders</p>
             </div>
           </div>
         </motion.div>
 
         {/* Stats Cards - สีอ่อนแบบ Pastel */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="gap-4 grid grid-cols-1 md:grid-cols-5 mb-8">
           {/* Total Orders - สีฟ้าอ่อน */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-0 shadow-lg hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 shadow-lg hover:shadow-xl border-0 transition-all">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600 font-semibold">Total Orders</p>
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <ShoppingCart className="h-6 w-6 text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-semibold text-gray-600 text-sm">Total Orders</p>
+                  <div className="flex justify-center items-center bg-gradient-to-br from-cyan-500 to-blue-500 shadow-md rounded-2xl w-12 h-12">
+                    <ShoppingCart className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-4xl font-black text-gray-900">{stats.total}</p>
-                <p className="text-xs text-gray-500 mt-1">vs last month</p>
+                <p className="font-black text-gray-900 text-4xl">{stats.total}</p>
+                <p className="mt-1 text-gray-500 text-xs">vs last month</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -142,16 +150,16 @@ const OrderManagement = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-0 shadow-lg hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-emerald-50 to-green-50 shadow-lg hover:shadow-xl border-0 transition-all">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600 font-semibold">Paid</p>
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <TrendingUp className="h-6 w-6 text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-semibold text-gray-600 text-sm">Paid</p>
+                  <div className="flex justify-center items-center bg-gradient-to-br from-emerald-500 to-green-500 shadow-md rounded-2xl w-12 h-12">
+                    <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-4xl font-black text-gray-900">{stats.paid}</p>
-                <p className="text-xs text-gray-500 mt-1">completed orders</p>
+                <p className="font-black text-gray-900 text-4xl">{stats.paid}</p>
+                <p className="mt-1 text-gray-500 text-xs">completed orders</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -162,16 +170,16 @@ const OrderManagement = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-0 shadow-lg hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl border-0 transition-all">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600 font-semibold">Pending</p>
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <AlertCircle className="h-6 w-6 text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-semibold text-gray-600 text-sm">Pending</p>
+                  <div className="flex justify-center items-center bg-gradient-to-br from-amber-500 to-yellow-500 shadow-md rounded-2xl w-12 h-12">
+                    <AlertCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-4xl font-black text-gray-900">{stats.pending}</p>
-                <p className="text-xs text-gray-500 mt-1">awaiting payment</p>
+                <p className="font-black text-gray-900 text-4xl">{stats.pending}</p>
+                <p className="mt-1 text-gray-500 text-xs">awaiting payment</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -182,16 +190,16 @@ const OrderManagement = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-gradient-to-br from-rose-50 to-pink-50 border-0 shadow-lg hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-rose-50 to-pink-50 shadow-lg hover:shadow-xl border-0 transition-all">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600 font-semibold">Cancelled</p>
-                  <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <XCircle className="h-6 w-6 text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-semibold text-gray-600 text-sm">Cancelled</p>
+                  <div className="flex justify-center items-center bg-gradient-to-br from-rose-500 to-pink-500 shadow-md rounded-2xl w-12 h-12">
+                    <XCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-4xl font-black text-gray-900">{stats.cancelled}</p>
-                <p className="text-xs text-gray-500 mt-1">cancelled orders</p>
+                <p className="font-black text-gray-900 text-4xl">{stats.cancelled}</p>
+                <p className="mt-1 text-gray-500 text-xs">cancelled orders</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -202,18 +210,18 @@ const OrderManagement = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-0 shadow-lg hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-purple-50 to-violet-50 shadow-lg hover:shadow-xl border-0 transition-all">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-600 font-semibold">Revenue</p>
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-md">
-                    <DollarSign className="h-6 w-6 text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-semibold text-gray-600 text-sm">Revenue</p>
+                  <div className="flex justify-center items-center bg-gradient-to-br from-purple-500 to-violet-500 shadow-md rounded-2xl w-12 h-12">
+                    <DollarSign className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <p className="text-3xl font-black text-gray-900">
+                <p className="font-black text-gray-900 text-3xl">
                   ฿{stats.revenue.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">total earnings</p>
+                <p className="mt-1 text-gray-500 text-xs">total earnings</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -225,28 +233,28 @@ const OrderManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <Card className="bg-white border-0 shadow-lg mb-6">
+          <Card className="bg-white shadow-lg mb-6 border-0">
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="gap-4 grid grid-cols-1 md:grid-cols-3">
                 <div className="md:col-span-2">
                   <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Search className="top-1/2 left-4 absolute w-5 h-5 text-gray-400 -translate-y-1/2 transform" />
                     <Input
                       type="text"
                       placeholder="Search by Order ID, Customer Name, or Email..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-12 h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="pl-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl focus:ring-2 focus:ring-blue-200 h-12"
                     />
                   </div>
                 </div>
 
                 <div className="relative">
-                  <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                  <Filter className="top-1/2 left-4 absolute w-5 h-5 text-gray-400 -translate-y-1/2 pointer-events-none transform" />
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full h-12 pl-12 pr-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all appearance-none bg-white cursor-pointer"
+                    className="bg-white pr-4 pl-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl focus:ring-2 focus:ring-blue-200 w-full h-12 transition-all appearance-none cursor-pointer"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
@@ -257,15 +265,15 @@ const OrderManagement = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-gray-600">
+              <div className="flex justify-between items-center mt-4">
+                <p className="text-gray-600 text-sm">
                   Showing <span className="font-bold text-blue-600">{filteredOrders.length}</span> of{' '}
                   <span className="font-bold">{orders.length}</span> orders
                 </p>
                 <Button
                   onClick={fetchOrders}
                   variant="outline"
-                  className="border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 rounded-xl"
+                  className="hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-500 rounded-xl"
                   disabled={loading}
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -282,18 +290,18 @@ const OrderManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <Card className="bg-white border-0 shadow-lg overflow-hidden">
+          <Card className="bg-white shadow-lg border-0 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-blue-600 to-cyan-600">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Order ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Customer</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Date</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Total</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white">Items</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-white">Status</th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-white">Actions</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-left">Order ID</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-left">Customer</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-left">Date</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-left">Total</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-center">Items</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-left">Status</th>
+                    <th className="px-6 py-4 font-bold text-white text-sm text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -305,7 +313,7 @@ const OrderManagement = () => {
                         exit={{ opacity: 0 }}
                       >
                         <td colSpan={7} className="px-6 py-12 text-center">
-                          <RefreshCw className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
+                          <RefreshCw className="mx-auto mb-2 w-8 h-8 text-blue-500 animate-spin" />
                           <p className="text-gray-500">Loading orders...</p>
                         </td>
                       </motion.tr>
@@ -316,17 +324,17 @@ const OrderManagement = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                          className="hover:bg-gray-50 border-gray-100 border-b transition-colors"
                         >
                           <td className="px-6 py-4">
-                            <span className="text-lg font-black text-blue-600">
+                            <span className="font-black text-blue-600 text-lg">
                               #{order.order_id}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                                <User className="h-5 w-5 text-white" />
+                              <div className="flex justify-center items-center bg-gradient-to-br from-purple-500 to-pink-500 rounded-full w-10 h-10">
+                                <User className="w-5 h-5 text-white" />
                               </div>
                               <div>
                                 <p className="font-bold text-gray-900">
@@ -339,23 +347,23 @@ const OrderManagement = () => {
                             {new Date(order.order_date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-lg font-black text-gray-900">
+                            <span className="font-black text-gray-900 text-lg">
                               ฿{parseFloat(order.total_price.toString()).toLocaleString()}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <Badge className="bg-purple-600 text-white border-0 text-base px-4 py-1">
+                            <Badge className="bg-purple-600 px-4 py-1 border-0 text-white text-base">
                               {order.items_count || 0}
                             </Badge>
                           </td>
 
                           {/* Status Dropdown */}
                           <td className="px-6 py-4">
-                            <div className="relative inline-block">
+                            <div className="inline-block relative">
                               <select
                                 value={order.status}
                                 onChange={(e) => handleUpdateStatus(order.order_id, e.target.value)}
-                                className="px-4 py-2 pr-8 rounded-xl font-bold border-0 shadow-md cursor-pointer hover:shadow-lg transition-all text-white appearance-none"
+                                className="shadow-md hover:shadow-lg px-4 py-2 pr-8 border-0 rounded-xl font-bold text-white transition-all appearance-none cursor-pointer"
                                 style={{
                                   background:
                                     order.status === 'paid'
@@ -380,7 +388,7 @@ const OrderManagement = () => {
                                   Refunded
                                 </option>
                               </select>
-                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                              <div className="top-1/2 right-2 absolute -translate-y-1/2 pointer-events-none transform">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -391,10 +399,10 @@ const OrderManagement = () => {
                           <td className="px-6 py-4 text-center">
                             <Button
                               onClick={() => handleViewDetails(order.order_id)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+                              className="bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg rounded-xl text-white transition-all"
                               size="sm"
                             >
-                              <Eye className="h-4 w-4 mr-2" />
+                              <Eye className="mr-2 w-4 h-4" />
                               View
                             </Button>
                           </td>
@@ -407,8 +415,8 @@ const OrderManagement = () => {
                         exit={{ opacity: 0 }}
                       >
                         <td colSpan={7} className="px-6 py-12 text-center">
-                          <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                          <p className="text-xl font-bold text-gray-900 mb-2">No orders found</p>
+                          <Package className="mx-auto mb-4 w-16 h-16 text-gray-400" />
+                          <p className="mb-2 font-bold text-gray-900 text-xl">No orders found</p>
                           <p className="text-gray-500">Try adjusting your search or filters</p>
                         </td>
                       </motion.tr>

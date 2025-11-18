@@ -25,7 +25,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router>
-          <div className="min-h-screen bg-gray-50">
+          <div className="bg-gray-50 min-h-screen">
             <Navbar />
             <Routes>
               {/* Public Routes */}
@@ -51,6 +51,7 @@ function App() {
               <Route path="/admin/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><OrderManagement /></AdminRoute>} />
               <Route path="/admin/gift-codes" element={<AdminRoute><GiftCodeManagement /></AdminRoute>} />
+              
             </Routes>
           </div>
         </Router>
